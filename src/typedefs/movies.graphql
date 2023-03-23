@@ -14,6 +14,10 @@ type MovieResponse {
   user: UserResponse
 }
 
+type DeleteMovieResponse {
+  message: String!
+}
+
 input CreateMovie {
   name: String!
   description: String!
@@ -39,13 +43,13 @@ enum MovieFields {
 }
 
 input Sorting {
-  field: MovieFields!
-  isAsc: Boolean!
+  sortColumn: MovieFields!
+  sortOrder: String!
 }
 
 input Pagination {
-  pageSize: Int
-  pageNumber: Int
+  perPage: Int
+  page: Int
 }
 
 type PaginationResponse {
@@ -70,5 +74,5 @@ type Query {
 type Mutation {
   createMovie(movie: CreateMovie!): MovieResponse @protected
   updateMovie(id: Int!, movie: UpdateMovie!): MovieResponse @protected
-  deleteMovie(id: Int!): MovieResponse @protected
+  deleteMovie(id: Int!): DeleteMovieResponse @protected
 }

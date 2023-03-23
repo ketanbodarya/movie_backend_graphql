@@ -7,12 +7,14 @@ import {
     MutationDeleteMovieArgs,
     PaginatedList,
     QueryMoviesArgs,
-    MovieFields
+    MovieFields,
+    DeleteMovieResponse
 } from "../datatypes/types";
 import respondWith from "../utils/respondWith";
 import Movie from "../db/models/Movies";
 import Users from "../db/models/Users";
 import { AppContext } from "../..";
+import { Op } from "sequelize";
 
 const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 10;
 
@@ -74,24 +76,24 @@ const updateMovie: Resolver<MovieResponse> = async (_: any, { id, movie }: Mutat
             });
 
             if (movieData) {
-                Movie.update(
+                await Movie.update(
                     movie,
                     {
                         where: { id: id },
                     }
-                ).then(() => {
-                    const updatedMovie = Movie.findOne({
-                        where: {
-                            id: id
-                        },
-                        include: [{
-                            model: Users,
-                            attributes: ['id', 'username', 'email']
-                        }]
-                    });
+                );
 
-                    return updatedMovie;
+                const updatedMovie = Movie.findOne({
+                    where: {
+                        id: id
+                    },
+                    include: [{
+                        model: Users,
+                        attributes: ['id', 'username', 'email']
+                    }]
                 });
+
+                return updatedMovie;
             }
             else {
                 respondWith('Movie not found', 404);
@@ -109,24 +111,24 @@ const updateMovie: Resolver<MovieResponse> = async (_: any, { id, movie }: Mutat
     }
 };
 
-const deleteMovie: Resolver<MovieResponse> = async (_: any, { id }: MutationDeleteMovieArgs, context: AppContext) => {
+const deleteMovie: Resolver<DeleteMovieResponse> = async (_: any, { id }: MutationDeleteMovieArgs, context: AppContext) => {
     try {
-        const movieData = Movie.findOne({
+        const movieData = await Movie.findOne({
             where: {
                 id: id
             }
         });
 
         if (movieData) {
-            return Movie.destroy(
+            await Movie.destroy(
                 {
                     where: { id: id },
                 }
             );
+            return { message: `Movie Deleted with the id = ${id}` };
         }
         else {
-            respondWith('Movie not found', 404);
-
+            return { message: `Movie with the id = ${id} not found.` };
         }
     }
     catch (e) {
@@ -138,11 +140,61 @@ const deleteMovie: Resolver<MovieResponse> = async (_: any, { id }: MutationDele
 const movies: Resolver<PaginatedList> = async (_: any,
     {
         filter,
-        pagination = { pageNumber: 1, pageSize: PAGE_SIZE },
-        sort = { field: MovieFields.Name, isAsc: true },
+        pagination = { page: 1, perPage: PAGE_SIZE },
+        sort = { sortColumn: MovieFields.Name, sortOrder: 'ASC' },
     }: QueryMoviesArgs
 ) => {
-    
+    const { page = 1, perPage = PAGE_SIZE } = pagination;
+    const { search } = filter;
+    const { sortColumn = MovieFields.Name, sortOrder = 'ASC' } = sort;
+
+    const offset = (page - 1) * perPage;
+
+    try {
+        let moviesList = await Movie.findAndCountAll({
+            where: {
+                [Op.or]: [
+                    {
+                        name: {
+                            [Op.iLike]: `%${search}%`
+                        }
+                    },
+                    {
+                        description: {
+                            [Op.iLike]: `%${search}%`
+                        }
+                    },
+                    {
+                        directorName: {
+                            [Op.iLike]: `%${search}%`
+                        }
+                    }
+                ]
+            },
+            order: [[sortColumn, sortOrder]],
+            include: [{
+                model: Users,
+                attributes: ['id', 'username', 'email']
+            }],
+            offset,
+            limit: perPage
+        });
+
+        const movies = moviesList.rows;
+        const count = moviesList.count;
+
+        return {
+            movies: movies,
+            meta: {
+                pageSize: perPage,
+                totalPages: Math.ceil(count / perPage),
+            },
+        };
+    }
+    catch (e) {
+        console.log(e);
+        respondWith('Internal Server Error', 500);
+    }
 };
 
 

@@ -29,6 +29,11 @@ export type CreateMovie = {
   releaseDate: Scalars['Date'];
 };
 
+export type DeleteMovieResponse = {
+  __typename?: 'DeleteMovieResponse';
+  message: Scalars['String'];
+};
+
 export type Filters = {
   search?: InputMaybe<Scalars['String']>;
 };
@@ -74,7 +79,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   changePassword?: Maybe<User>;
   createMovie?: Maybe<MovieResponse>;
-  deleteMovie?: Maybe<MovieResponse>;
+  deleteMovie?: Maybe<DeleteMovieResponse>;
   signup?: Maybe<User>;
   updateMovie?: Maybe<MovieResponse>;
 };
@@ -112,8 +117,8 @@ export type PaginatedList = {
 };
 
 export type Pagination = {
-  pageNumber?: InputMaybe<Scalars['Int']>;
-  pageSize?: InputMaybe<Scalars['Int']>;
+  page?: InputMaybe<Scalars['Int']>;
+  perPage?: InputMaybe<Scalars['Int']>;
 };
 
 export type PaginationResponse = {
@@ -153,8 +158,8 @@ export type Signup = {
 };
 
 export type Sorting = {
-  field: MovieFields;
-  isAsc: Scalars['Boolean'];
+  sortColumn: MovieFields;
+  sortOrder: Scalars['String'];
 };
 
 export type UpdateMovie = {
@@ -252,6 +257,7 @@ export type ResolversTypes = ResolversObject<{
   ChangePassword: ChangePassword;
   CreateMovie: CreateMovie;
   Date: ResolverTypeWrapper<Scalars['Date']>;
+  DeleteMovieResponse: ResolverTypeWrapper<DeleteMovieResponse>;
   Filters: Filters;
   Int: ResolverTypeWrapper<Scalars['Int']>;
   Login: Login;
@@ -278,6 +284,7 @@ export type ResolversParentTypes = ResolversObject<{
   ChangePassword: ChangePassword;
   CreateMovie: CreateMovie;
   Date: Scalars['Date'];
+  DeleteMovieResponse: DeleteMovieResponse;
   Filters: Filters;
   Int: Scalars['Int'];
   Login: Login;
@@ -304,6 +311,11 @@ export type ProtectedDirectiveResolver<Result, Parent, ContextType = AppContext,
 export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
   name: 'Date';
 }
+
+export type DeleteMovieResponseResolvers<ContextType = AppContext, ParentType extends ResolversParentTypes['DeleteMovieResponse'] = ResolversParentTypes['DeleteMovieResponse']> = ResolversObject<{
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
 
 export type LoginResponseResolvers<ContextType = AppContext, ParentType extends ResolversParentTypes['LoginResponse'] = ResolversParentTypes['LoginResponse']> = ResolversObject<{
   email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -334,7 +346,7 @@ export type MovieResponseResolvers<ContextType = AppContext, ParentType extends 
 export type MutationResolvers<ContextType = AppContext, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   changePassword?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationChangePasswordArgs, 'data'>>;
   createMovie?: Resolver<Maybe<ResolversTypes['MovieResponse']>, ParentType, ContextType, RequireFields<MutationCreateMovieArgs, 'movie'>>;
-  deleteMovie?: Resolver<Maybe<ResolversTypes['MovieResponse']>, ParentType, ContextType, RequireFields<MutationDeleteMovieArgs, 'id'>>;
+  deleteMovie?: Resolver<Maybe<ResolversTypes['DeleteMovieResponse']>, ParentType, ContextType, RequireFields<MutationDeleteMovieArgs, 'id'>>;
   signup?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationSignupArgs, 'user'>>;
   updateMovie?: Resolver<Maybe<ResolversTypes['MovieResponse']>, ParentType, ContextType, RequireFields<MutationUpdateMovieArgs, 'id' | 'movie'>>;
 }>;
@@ -372,6 +384,7 @@ export type UserResponseResolvers<ContextType = AppContext, ParentType extends R
 
 export type Resolvers<ContextType = AppContext> = ResolversObject<{
   Date?: GraphQLScalarType;
+  DeleteMovieResponse?: DeleteMovieResponseResolvers<ContextType>;
   LoginResponse?: LoginResponseResolvers<ContextType>;
   Movie?: MovieResolvers<ContextType>;
   MovieResponse?: MovieResponseResolvers<ContextType>;
